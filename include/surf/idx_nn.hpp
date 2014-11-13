@@ -3,6 +3,8 @@
 
 #include "sdsl/suffix_trees.hpp"
 #include "sdsl/k2_treap.hpp"
+//#include "sdsl/wt_topk.hpp"
+//#include "sdsl/wt_topk_algorithm.hpp"
 #include "surf/df_sada.hpp"
 #include "surf/rank_functions.hpp"
 #include "surf/idx_d.hpp"
@@ -67,7 +69,9 @@ public:
     typedef t_h_select                                 h_select_type;
     typedef t_rmq                                      rmqc_type;
     typedef t_k2treap                                  k2treap_type;
+    // RK: this should depend on t_k2treap;
     typedef k2_treap_ns::top_k_iterator<k2treap_type>  k2treap_iterator;
+//    typedef wt_topk<>::top_k_iterator                  k2treap_iterator;
     typedef typename t_csa::alphabet_category          alphabet_category;
 
     typedef map_to_dup_type<h_select_type> map_to_h_type;
