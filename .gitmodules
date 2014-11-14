@@ -1,12 +1,13 @@
 [submodule "external/fastpfor"]
 	path = external/fastpfor
 	url = https://github.com/lemire/FastPFor.git
-[submodule "external/sdsl-lite"]
-	path = external/sdsl-lite
-	url = https://github.com/simongog/sdsl-lite.git
 [submodule "external/zeromq"]
 	path = external/zeromq
 	url = https://github.com/zeromq/libzmq.git
 [submodule "external/cppzmq"]
 	path = external/cppzmq
 	url = https://github.com/zeromq/cppzmq.git
+[submodule "external/sdsl-lite"]
+	path = external/sdsl-lite
+	url = https://github.com/rkonow/sdsl-lite
+	branch = wt_topk2
