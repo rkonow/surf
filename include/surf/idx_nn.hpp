@@ -3,6 +3,7 @@
 
 #include "sdsl/suffix_trees.hpp"
 #include "sdsl/k2_treap.hpp"
+#include "sdsl/wt_topk.hpp"
 #include "surf/df_sada.hpp"
 #include "surf/rank_functions.hpp"
 #include "surf/idx_d.hpp"
@@ -67,7 +68,11 @@ public:
     typedef t_h_select                                 h_select_type;
     typedef t_rmq                                      rmqc_type;
     typedef t_k2treap                                  k2treap_type;
-    typedef k2_treap_ns::top_k_iterator<k2treap_type>  k2treap_iterator;
+
+//    typedef k2_treap_ns::top_k_iterator<k2treap_type>  k2treap_iterator;
+
+
+
     typedef typename t_csa::alphabet_category          alphabet_category;
 
     typedef map_to_dup_type<h_select_type> map_to_h_type;
@@ -96,7 +101,10 @@ public:
             uint64_t           m_ep;  // end point of lex interval
             t_doc_val          m_doc_val;  // stores the current result
             bool               m_valid = false;
-            k2treap_iterator   m_k2_iter;
+
+//            decltype(  m_valid ) m_k2_iter;
+            decltype( top_k(std::declval<t_k2treap>(),{0ULL,0ULL},{0ULL,0ULL}) ) m_k2_iter;
+//            k2treap_iterator   m_k2_iter;
             std::set<uint64_t> m_reported;
             std::set<uint64_t> m_singletons;
             t_stack_array      m_states;
