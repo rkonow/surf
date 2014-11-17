@@ -49,7 +49,7 @@ struct map_to_dup_type{
  *   - H 
  */
 template<typename t_csa,
-         typename t_k2treap,
+         typename t_grid,
          typename t_rmq = sdsl::rmq_succinct_sct<>,
          typename t_border = sdsl::sd_vector<>,
          typename t_border_rank = typename t_border::rank_1_type,
@@ -67,11 +67,7 @@ public:
     typedef t_h                                        h_type;
     typedef t_h_select                                 h_select_type;
     typedef t_rmq                                      rmqc_type;
-    typedef t_k2treap                                  k2treap_type;
-
-//    typedef k2_treap_ns::top_k_iterator<k2treap_type>  k2treap_iterator;
-
-
+    typedef t_grid                                  grid_type;
 
     typedef typename t_csa::alphabet_category          alphabet_category;
 
@@ -85,7 +81,7 @@ public:
     h_select_type     m_h_select;
     int_vector<>       m_doc; // documents in node lists
     rmqc_type          m_rmqc;
-    k2treap_type       m_k2treap;
+    grid_type       m_grid;
     map_to_h_type     m_map_to_h;
 
 public:
@@ -95,6 +91,7 @@ public:
             typedef void(*t_mfptr)();
             typedef std::pair<uint64_t, double> t_doc_val;
             typedef std::stack<std::array<uint64_t,2>> t_stack_array;
+            typedef decltype(top_k(std::declval<t_grid>(),{0ULL,0ULL},{0ULL,0ULL})) t_2d_range_iter;
         private:
             const idx_nn*      m_idx;
             uint64_t           m_sp;  // start point of lex interval
@@ -102,9 +99,7 @@ public:
             t_doc_val          m_doc_val;  // stores the current result
             bool               m_valid = false;
 
-//            decltype(  m_valid ) m_k2_iter;
-            decltype( top_k(std::declval<t_k2treap>(),{0ULL,0ULL},{0ULL,0ULL}) ) m_k2_iter;
-//            k2treap_iterator   m_k2_iter;
+            t_2d_range_iter    m_2d_range_iter;
             std::set<uint64_t> m_reported;
             std::set<uint64_t> m_singletons;
             t_stack_array      m_states;
@@ -125,7 +120,7 @@ public:
                     auto h_range = m_idx->m_map_to_h(m_sp, m_ep);
                     if ( !empty(h_range) ) {
                         uint64_t depth = end-begin;
-                        m_k2_iter = top_k(m_idx->m_k2treap, {std::get<0>(h_range) ,0}, {std::get<1>(h_range), depth-1});
+                        m_2d_range_iter = top_k(m_idx->m_grid, {std::get<0>(h_range) ,0}, {std::get<1>(h_range), depth-1});
                     }
                     m_states.push({m_sp, m_ep});
                     ++(*this);
@@ -135,13 +130,13 @@ public:
             top_k_iterator& operator++(){
                 if ( m_valid ){
                     m_valid = false;
-                    if ( m_k2_iter ) { // multiple occurrence result exists
-                        auto xy_w       = *m_k2_iter;
+                    if ( m_2d_range_iter ) { // multiple occurrence result exists
+                        auto xy_w       = *m_2d_range_iter;
                         uint64_t doc_id = m_idx->m_doc[real(xy_w.first)]; 
                         m_doc_val = t_doc_val(doc_id, xy_w.second+1);
                         m_reported.insert(doc_id);
                         m_valid = true;
-                        ++m_k2_iter;
+                        ++m_2d_range_iter;
                     } else { // search for singleton results
                         while ( !m_multi_occ and !m_states.empty() ) {
                             auto state = m_states.top();
@@ -228,7 +223,7 @@ public:
         m_h_select.set_vector(&m_h);
         m_map_to_h = map_to_h_type(&m_h_select);
         load_from_cache(m_rmqc, surf::KEY_RMQC, cc, true); 
-        load_from_cache(m_k2treap, surf::KEY_W_AND_P, cc, true); 
+        load_from_cache(m_grid, surf::KEY_W_AND_P, cc, true); 
     }
 
     size_type serialize(std::ostream& out, structure_tree_node* v=nullptr, std::string name="")const {
@@ -241,7 +236,7 @@ public:
         written_bytes += m_h.serialize(out, child, "H");
         written_bytes += m_h_select.serialize(out, child, "H_SELECT");
         written_bytes += m_rmqc.serialize(out, child, "RMQ_C");
-        written_bytes += m_k2treap.serialize(out, child, "W_AND_P");
+        written_bytes += m_grid.serialize(out, child, "W_AND_P");
         structure_tree::add_size(child, written_bytes);
         return written_bytes;
     }
@@ -274,7 +269,7 @@ struct map_node_to_dup_type{
 };
 
 template<typename t_csa,
-         typename t_k2treap,
+         typename t_grid,
          typename t_rmq,
          typename t_border,
          typename t_border_rank,
@@ -282,7 +277,7 @@ template<typename t_csa,
          typename t_h,
          typename t_h_select
          >
-void construct(idx_nn<t_csa,t_k2treap,t_rmq,t_border,t_border_rank,t_border_select,t_h,t_h_select>& idx,
+void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,t_h,t_h_select>& idx,
                const std::string&,
                sdsl::cache_config& cc, uint8_t num_bytes)
 {    
@@ -416,7 +411,7 @@ void construct(idx_nn<t_csa,t_k2treap,t_rmq,t_border,t_border_rank,t_border_sele
         store_to_cache(rmq_c, surf::KEY_RMQC, cc, true); 
     }
     cout<<"...W_AND_P"<<endl;
-    if (!cache_file_exists<t_k2treap>(surf::KEY_W_AND_P, cc))
+    if (!cache_file_exists<t_grid>(surf::KEY_W_AND_P, cc))
     {
         int_vector_buffer<> P_buf(cache_file_name(surf::KEY_P, cc));
         std::string W_and_P_file = cache_file_name(surf::KEY_W_AND_P, cc);
@@ -436,10 +431,10 @@ void construct(idx_nn<t_csa,t_k2treap,t_rmq,t_border,t_border_rank,t_border_sele
             load_from_cache(W, surf::KEY_WEIGHTS, cc);
             store_to_file(W, W_and_P_file+".w");
         }
-        cout<<"build k2treap"<<endl;
-        t_k2treap k2treap;
-        construct(k2treap, cache_file_name(surf::KEY_W_AND_P,cc));
-        store_to_cache(k2treap, surf::KEY_W_AND_P, cc, true);
+        cout<<"build grid"<<endl;
+        t_grid grid;
+        construct(grid, cache_file_name(surf::KEY_W_AND_P,cc));
+        store_to_cache(grid, surf::KEY_W_AND_P, cc, true);
         sdsl::remove(W_and_P_file+".x");
         sdsl::remove(W_and_P_file+".y");
         sdsl::remove(W_and_P_file+".w");
