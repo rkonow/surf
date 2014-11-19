@@ -272,6 +272,23 @@ struct map_node_to_dup_type{
     }
 };
 
+
+
+int_vector<> sorted_perm(int_vector<>& v)
+{
+    int_vector<> perm(v.size(), 0, bits::hi(v.size())+1);
+    util::set_to_id(perm);
+    sort(perm.begin(), perm.end(), [&v](const size_t& i,
+            const size_t& j) {
+        auto x = v[i], y = v[j];
+        if (x == y)
+            return i < j;
+        return x < y;
+    });
+    return std::move(perm);
+}
+
+
 template<typename t_csa,
          typename t_grid,
          typename t_rmq,
@@ -427,19 +444,15 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
         }
         {
             t_grid grid;
-            std::string temp_file = buf_w.filename() +
-                    + "_wt_topk_" + std::to_string(util::pid())
-                    + "_" + std::to_string(util::id());
-
-            if (t_grid::permuted_x) {
+            if (t_grid::permuted_x == true) {
                 int_vector<> D;
                 load_from_cache(D, surf::KEY_DUP, cc);
                 int_vector<> P;
                 load_from_cache(P, surf::KEY_P, cc);
-                int_vector<> perm = grid.sorted_perm(P);
+                int_vector<> perm = sorted_perm(P);
                 std::string D_file = cache_file_name(surf::KEY_PERMUTED_DOC, cc);
-                int_vector_buffer<> permuted_d(D_file, std::ios::out);
-                for (size_type i=0; i<P.size(); ++i) {
+                int_vector<> permuted_d(P.size());
+                for (size_t i=0; i<P.size(); ++i) {
                     permuted_d[i] = D[perm[i]];
                 }
                 store_to_cache(permuted_d, surf::KEY_PERMUTED_DOC, cc, true);
