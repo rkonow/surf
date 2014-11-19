@@ -67,7 +67,7 @@ public:
     typedef t_h                                        h_type;
     typedef t_h_select                                 h_select_type;
     typedef t_rmq                                      rmqc_type;
-    typedef t_grid                                  grid_type;
+    typedef t_grid                                     grid_type;
 
     typedef typename t_csa::alphabet_category          alphabet_category;
 
@@ -212,7 +212,11 @@ public:
 
     void load(sdsl::cache_config& cc){
         load_from_cache(m_csa, surf::KEY_CSA, cc, true);
-        load_from_cache(m_doc, surf::KEY_DUP, cc);
+        if (!t_grid::permuted_x)
+            load_from_cache(m_doc, surf::KEY_DUP, cc);
+        else
+            load_from_cache(m_doc, surf::KEY_PERMUTED_DOC, cc);
+
         load_from_cache(m_border, surf::KEY_DOCBORDER, cc, true); 
         load_from_cache(m_border_rank, surf::KEY_DOCBORDER_RANK, cc, true); 
         m_border_rank.set_vector(&m_border);
@@ -332,15 +336,6 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
         t_border_select doc_border_select(&sd_doc_border);
         store_to_cache(doc_border_select, surf::KEY_DOCBORDER_SELECT, cc, true);
     }
-    cout<<"...WTD"<<endl;
-    if (!cache_file_exists<t_wtd>(surf::KEY_WTD, cc) ){
-        construct_darray<t_csa::alphabet_type::int_width>(cc, false);
-        t_wtd wtd;
-        construct(wtd, cache_file_name(surf::KEY_DARRAY, cc), cc);
-        cout << "wtd.size() = " << wtd.size() << endl;
-        cout << "wtd.sigma = " << wtd.sigma << endl;
-        store_to_cache(wtd, surf::KEY_WTD, cc, true);
-    }
 // P corresponds to up-pointers
     cout<<"...P"<<endl;
     if (!cache_file_exists(surf::KEY_P, cc))
@@ -411,33 +406,52 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
         store_to_cache(rmq_c, surf::KEY_RMQC, cc, true); 
     }
     cout<<"...W_AND_P"<<endl;
-    if (!cache_file_exists<t_grid>(surf::KEY_W_AND_P, cc))
-    {
+    if (!cache_file_exists<t_grid>(surf::KEY_W_AND_P, cc)) {
         int_vector_buffer<> P_buf(cache_file_name(surf::KEY_P, cc));
         std::string W_and_P_file = cache_file_name(surf::KEY_W_AND_P, cc);
-        cout<<"P_buf.size()=" << P_buf.size() << endl;
+        cout << "P_buf.size()=" << P_buf.size() << endl;
         {
-            int_vector<> id_v(P_buf.size(), 0,bits::hi(P_buf.size())+1);
+            int_vector<> id_v(P_buf.size(), 0, bits::hi(P_buf.size()) + 1);
             util::set_to_id(id_v);
-            store_to_file(id_v, W_and_P_file+".x");
+            store_to_file(id_v, W_and_P_file + ".x");
         }
         {
             int_vector<> P;
             load_from_cache(P, surf::KEY_P, cc);
-            store_to_file(P, W_and_P_file+".y");
+            store_to_file(P, W_and_P_file + ".y");
         }
         {
             int_vector<> W;
             load_from_cache(W, surf::KEY_WEIGHTS, cc);
-            store_to_file(W, W_and_P_file+".w");
+            store_to_file(W, W_and_P_file + ".w");
         }
-        cout<<"build grid"<<endl;
-        t_grid grid;
-        construct(grid, cache_file_name(surf::KEY_W_AND_P,cc));
-        store_to_cache(grid, surf::KEY_W_AND_P, cc, true);
-        sdsl::remove(W_and_P_file+".x");
-        sdsl::remove(W_and_P_file+".y");
-        sdsl::remove(W_and_P_file+".w");
+        {
+            t_grid grid;
+            std::string temp_file = buf_w.filename() +
+                    + "_wt_topk_" + std::to_string(util::pid())
+                    + "_" + std::to_string(util::id());
+
+            if (t_grid::permuted_x) {
+                int_vector<> D;
+                load_from_cache(D, surf::KEY_DUP, cc);
+                int_vector<> P;
+                load_from_cache(P, surf::KEY_P, cc);
+                int_vector<> perm = grid.sorted_perm(P);
+                std::string D_file = cache_file_name(surf::KEY_PERMUTED_DOC, cc);
+                int_vector_buffer<> permuted_d(D_file, std::ios::out);
+                for (size_type i=0; i<P.size(); ++i) {
+                    permuted_d[i] = D[perm[i]];
+                }
+                store_to_cache(permuted_d, surf::KEY_PERMUTED_DOC, cc, true);
+            }
+            cout << "build grid" << endl;
+            construct(grid, cache_file_name(surf::KEY_W_AND_P, cc));
+            store_to_cache(grid, surf::KEY_W_AND_P, cc, true);
+            sdsl::remove(W_and_P_file + ".x");
+            sdsl::remove(W_and_P_file + ".y");
+            sdsl::remove(W_and_P_file + ".w");
+
+        }
     }
 }
 

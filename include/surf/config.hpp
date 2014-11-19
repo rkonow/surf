@@ -51,6 +51,8 @@ const std::string KEY_MAXDOCLEN = "maxdoclen";
 const std::string KEY_MAXCSTDEPTH = "maxcstdepth";
 const std::string KEY_WEIGHTS = "weights";
 const std::string KEY_W_AND_P = "W_and_P";
+const std::string KEY_PERMUTED_DOC = "perm_doc";
+
 
 std::vector<std::string> storage_keys = {KEY_DOCCNT,
 										 KEY_DARRAY,
