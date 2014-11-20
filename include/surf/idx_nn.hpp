@@ -450,7 +450,6 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
                 int_vector<> P;
                 load_from_cache(P, surf::KEY_P, cc);
                 int_vector<> perm = sorted_perm(P);
-                std::string D_file = cache_file_name(surf::KEY_PERMUTED_DOC, cc);
                 int_vector<> permuted_d(P.size());
                 for (size_t i=0; i<P.size(); ++i) {
                     permuted_d[i] = D[perm[i]];
