@@ -215,7 +215,7 @@ public:
         if (!t_grid::permuted_x)
             load_from_cache(m_doc, surf::KEY_DUP, cc);
         else
-            load_from_cache(m_doc, surf::KEY_PERMUTED_DOC, cc);
+            load_from_cache(m_doc, surf::KEY_PERMUTED_DOC, cc, true);
 
         load_from_cache(m_border, surf::KEY_DOCBORDER, cc, true); 
         load_from_cache(m_border_rank, surf::KEY_DOCBORDER_RANK, cc, true); 
@@ -454,7 +454,7 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
                 for (size_t i=0; i<P.size(); ++i) {
                     permuted_d[i] = D[perm[i]];
                 }
-                store_to_cache(permuted_d, surf::KEY_PERMUTED_DOC, cc, true);
+                store_to_cache(permuted_d, surf::KEY_PERMUTED_DOC, cc);
             }
             cout << "build grid" << endl;
             construct(grid, cache_file_name(surf::KEY_W_AND_P, cc));
@@ -462,7 +462,6 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
             sdsl::remove(W_and_P_file + ".x");
             sdsl::remove(W_and_P_file + ".y");
             sdsl::remove(W_and_P_file + ".w");
-
         }
     }
 }
