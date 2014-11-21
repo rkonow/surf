@@ -445,15 +445,16 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
         {
             t_grid grid;
             if (t_grid::permuted_x == true) {
-                int_vector<> D;
-                load_from_cache(D, surf::KEY_DUP, cc);
-                int_vector<> P;
+                int_vector<> D;                           // n log N 
+                load_from_cache(D, surf::KEY_DUP, cc);     
+                int_vector<> P;                           // O(n \log\log n) 
                 load_from_cache(P, surf::KEY_P, cc);
-                int_vector<> perm = sorted_perm(P);
-                int_vector<> permuted_d(P.size());
+                int_vector<> perm = sorted_perm(P);       // n log n 
+                int_vector<> permuted_d(P.size());        // n log N
                 for (size_t i=0; i<P.size(); ++i) {
                     permuted_d[i] = D[perm[i]];
                 }
+                // 2*n\log N + n\log n + O(n\log\log n) 
                 store_to_cache(permuted_d, surf::KEY_PERMUTED_DOC, cc);
             }
             cout << "build grid" << endl;
