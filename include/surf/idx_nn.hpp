@@ -445,17 +445,31 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
         {
             t_grid grid;
             if (t_grid::permuted_x == true) {
+                auto perm_KEY = "KEY_" + std::to_string(util::pid())
+                               + "_" + std::to_string(util::id());
+                auto perm_file = cache_file_name(perm_KEY , cc);
+                {
+                    int_vector<> perm;
+                    int_vector<> P;                           
+                    load_from_cache(P, surf::KEY_P, cc);
+                    perm = sorted_perm(P); 
+                    store_to_file(perm, perm_file);
+                }
+                std::string perm_d_file = cache_file_name(surf::KEY_PERMUTED_DOC, cc);
+                uint64_t doc_width = 0;
+                {
+                    int_vector_buffer<> d_buf(cache_file_name(surf::KEY_DUP, cc));
+                    doc_width = d_buf.width();
+                }
+                int_vector_buffer<> permuted_d(perm_d_file, std::ios::out, 1<<20, doc_width); 
                 int_vector<> D;                           // n log N 
-                load_from_cache(D, surf::KEY_DUP, cc);     
-                int_vector<> P;                           // O(n \log\log n) 
-                load_from_cache(P, surf::KEY_P, cc);
-                int_vector<> perm = sorted_perm(P);       // n log n 
-                int_vector<> permuted_d(P.size());        // n log N
-                for (size_t i=0; i<P.size(); ++i) {
-                    permuted_d[i] = D[perm[i]];
+                load_from_cache(D, surf::KEY_DUP, cc);   
+                int_vector_buffer<> perm_buf(perm_file);
+                for (size_t i=0; i<D.size(); ++i) {
+                    permuted_d[i] = D[perm_buf[i]];
                 }
                 // 2*n\log N + n\log n + O(n\log\log n) 
-                store_to_cache(permuted_d, surf::KEY_PERMUTED_DOC, cc);
+                sdsl::remove(perm_file);
             }
             cout << "build grid" << endl;
             construct(grid, cache_file_name(surf::KEY_W_AND_P, cc));
