@@ -21,32 +21,35 @@ my_format2 <- function(...){
    format(..., nsmall=2,digits=2, big.mark=",")
 }
 
-tikz("experiment3.tex", width = 5.9, height = 5.0, standAlone = F)
+#tikz("experiment3.tex", width = 5.9, height = 5.0, standAlone = F)
 
 
 raw <- data_frame_from_key_value_pairs("../results/experiment3.txt")
-raw2 <- data_frame_from_key_value_pairs("../../external/sdsl-lite/benchmark/document_retrieval/results/all.txt")
-raw4 <- data_frame_from_key_value_pairs("../results/experiment4.txt")
-raw5 <- data_frame_from_key_value_pairs("../results/experiment5.txt")
-raw4 <- cbind(raw4, TLE=rep(0, nrow(raw4)))
-raw4 <- cbind(raw4, collection_file=rep("ENWIKISML", nrow(raw4)))
-colnames(raw4) <- gsub("idx","index_name",colnames(raw4))
+#raw2 <- data_frame_from_key_value_pairs("../../external/sdsl-lite/benchmark/document_retrieval/results/all.txt")
+#raw4 <- data_frame_from_key_value_pairs("../results/experiment4.txt")
+#raw5 <- data_frame_from_key_value_pairs("../results/experiment5.txt")
+#raw4 <- cbind(raw4, TLE=rep(0, nrow(raw4)))
+#raw4 <- cbind(raw4, collection_file=rep("ENWIKISML", nrow(raw4)))
+#colnames(raw4) <- gsub("idx","index_name",colnames(raw4))
 
-dcc13data <- raw4[c("collection_file","index_name","query_len","time_per_query","TLE")]
-fastdata <- raw5[c("collection_file","index_name","query_len","time_per_query","TLE")]
-fastdata <- subset(fastdata,fastdata$index_name=="IDX_NNXU")
+#dcc13data <- raw4[c("collection_file","index_name","query_len","time_per_query","TLE")]
+#fastdata <- raw5[c("collection_file","index_name","query_len","time_per_query","TLE")]
+#fastdata <- subset(fastdata,fastdata$index_name=="IDX_NNXU")
 
-names(raw2) <- gsub("TC_ID","collection_file",names(raw2))
-names(raw2) <- gsub("IDX_ID","index_name",names(raw2))
-raw3 <- data_frame_from_key_value_pairs("../../external/sdsl-lite/benchmark/document_retrieval/results/all_int.txt")
-names(raw3) <- gsub("TC_ID","collection_file",names(raw3))
-names(raw3) <- gsub("IDX_ID","index_name",names(raw3))
+#names(raw2) <- gsub("TC_ID","collection_file",names(raw2))
+#names(raw2) <- gsub("IDX_ID","index_name",names(raw2))
+#raw3 <- data_frame_from_key_value_pairs("../../external/sdsl-lite/benchmark/document_retrieval/results/all_int.txt")
+#names(raw3) <- gsub("TC_ID","collection_file",names(raw3))
+#names(raw3) <- gsub("IDX_ID","index_name",names(raw3))
 
-data <- rbind( 
-    raw[c("collection_file","index_name","query_len","time_per_query","TLE")],
-    raw2[c("collection_file","index_name","query_len","time_per_query","TLE")],
-    raw3[c("collection_file","index_name","query_len","time_per_query","TLE")])
+#data <- rbind( 
+#    raw[c("collection_file","index_name","query_len","time_per_query","TLE")]#,
+#    raw2[c("collection_file","index_name","query_len","time_per_query","TLE")],
+#    raw3[c("collection_file","index_name","query_len","time_per_query","TLE")]
+#)
+data <- raw[c("collection_file","index_name","query_len","time_per_query","TLE")]
 data <- subset(data,data[["TLE"]]==0)
+
 
 data[["collection_file"]] <- gsub("../collections/","",data[["collection_file"]])
 data[["index_name"]] <- as.character( data[["index_name"]] )
@@ -55,34 +58,43 @@ d <- split(data, data$collection_file)
 collections <- names(d)
 
 idx2pch <- list()
-idx2pch[["IDX_NNX"]] <- 1
-idx2pch[["IDX_NNX_INT"]] <- 1
-idx2pch[["GREEDY"]] <- 2 
-idx2pch[["GREEDYINT"]] <- 2 
-idx2pch[["SORT"]] <- 3
-idx2pch[["SORTINT"]] <- 3
-idx2pch[["DCC13KN"]] <- 4 
-idx2pch[["IDX_NNXU"]] <- 1
+idx2pch[["IDX_NNWT"]] <- 1
+idx2pch[["IDX_NNWT_INT"]] <- 1
+idx2pch[["IDX_NNWTP"]] <-2 
+idx2pch[["IDX_NNWTP_INT"]] <-2 
+idx2pch[["IDX_NN"]] <- 3 
+idx2pch[["IDX_NN_INT"]] <- 3 
+
+#idx2pch[["GREEDY"]] <- 2 
+#idx2pch[["GREEDYINT"]] <- 2 
+#idx2pch[["SORT"]] <- 3
+#idx2pch[["SORTINT"]] <- 3
+#idx2pch[["DCC13KN"]] <- 4 
+#idx2pch[["IDX_NNXU"]] <- 1
 
 idx2name <- list()
-idx2name[["IDX_NNX"]] <- "\\IDXNNX"
-idx2name[["IDX_NNXU"]] <- "\\IDXNNXU"
-idx2name[["IDX_NNX_INT"]] <- "\\IDXNNX"
-idx2name[["GREEDY"]] <- "\\GREEDY"
-idx2name[["GREEDYINT"]] <- "\\GREEDY"
-idx2name[["SORT"]] <- "\\SORT"
-idx2name[["SORTINT"]] <- "\\SORT"
-idx2name[["DCC13KN"]] <- "\\IDXKN" 
+idx2name[["IDX_NNWT"]] <- "\\IDXNNX"
+idx2name[["IDX_NN"]] <- "IDXNN"
+idx2name[["IDX_NNWT_INT"]] <- "\\IDXNNX"
+idx2name[["IDX_NN_INT"]] <- "IDXNNINT"
+#idx2name[["GREEDY"]] <- "\\GREEDY"
+#idx2name[["GREEDYINT"]] <- "\\GREEDY"
+#idx2name[["SORT"]] <- "\\SORT"
+#idx2name[["SORTINT"]] <- "\\SORT"
+#idx2name[["DCC13KN"]] <- "\\IDXKN" 
 
 idx2col <- list()
-idx2col[["IDX_NNX"]] <- "red"
-idx2col[["IDX_NNXU"]] <- "blue"
-idx2col[["IDX_NNX_INT"]] <- "red"
-idx2col[["GREEDY"]] <- "gray30"
-idx2col[["GREEDYINT"]] <- "gray30"
-idx2col[["SORT"]] <- "gray30"
-idx2col[["SORTINT"]] <- "gray30"
-idx2col[["DCC13KN"]] <- "blue" 
+idx2col[["IDX_NNWT"]] <- "red"
+idx2col[["IDX_NNWTP"]] <- "green"
+idx2col[["IDX_NN"]] <- "blue"
+idx2col[["IDX_NNWT_INT"]] <- "red"
+idx2col[["IDX_NN_INT"]] <- "blue"
+idx2col[["IDX_NNWTP_INT"]] <- "green"
+#idx2col[["GREEDY"]] <- "gray30"
+#idx2col[["GREEDYINT"]] <- "gray30"
+#idx2col[["SORT"]] <- "gray30"
+#idx2col[["SORTINT"]] <- "gray30"
+#idx2col[["DCC13KN"]] <- "blue" 
 
 
 par(mfrow=c(2,2))
@@ -95,16 +107,17 @@ par(mar=c(1,2,1.5,0.5)) # inner margin (bottom,left,top,right)
 
 
 
-for ( collection in c("ENWIKISML","ENWIKIBIG","ENWIKISMLINT","ENWIKIBIGINT") ){
+#for ( collection in c("ENWIKISML","ENWIKIBIG","ENWIKISMLINT","ENWIKIBIGINT") ){
+for ( collection in c("ENWIKISML","ENWIKISMLINT") ){
     cat(collection)
     cat("\n")
     d2 <- d[[collection]]
-    if ( collection == "ENWIKISML" ) {
-        d2 <- rbind(d2, dcc13data)
-        d2 <- rbind(d2, fastdata)
-    }
+#    if ( collection == "ENWIKISML" ) {
+#        d2 <- rbind(d2, dcc13data)
+#        d2 <- rbind(d2, fastdata)
+#    }
     d3 <- split(d2,d2[["index_name"]])
-    if ( length(d3) > 1 ) {
+#    if ( length(d3) > 1 ) {
 
         colname <- gsub("ENWIKI(.*)","\\\\ENWIKI\\1",collection)
         colname <- gsub("gov2","\\\\GOVII",colname)
@@ -142,7 +155,8 @@ for ( collection in c("ENWIKISML","ENWIKIBIG","ENWIKISMLINT","ENWIKIBIGINT") ){
                   pch=idx2pch[[idx]], type="b",col=idx2col[[idx]])
         }
         if ( collection == "ENWIKISML" ) {
-            x <- c("SORT", "GREEDY", "DCC13KN","IDX_NNX","IDX_NNXU")
+#            x <- c("SORT", "GREEDY", "DCC13KN","IDX_NNX","IDX_NNXU")
+            x <- c("IDX_NNWT","IDX_NNWTP","IDX_NN")
 
             legend("topright",
                     legend=as.character(unlist(idx2name[x])),
@@ -150,12 +164,12 @@ for ( collection in c("ENWIKISML","ENWIKIBIG","ENWIKISMLINT","ENWIKIBIGINT") ){
                     col=as.vector(unlist(idx2col[x])),
                     bty="n", cex=1
                   )
-        }
+       }
 
-    }
+#    }
 }
 #box("outer", col="blue") 
 #box("figure", col="green")  
 #box("plot", col="red")
 
-dev.off()
+#dev.off()
