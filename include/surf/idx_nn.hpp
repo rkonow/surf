@@ -455,7 +455,6 @@ void construct(idx_nn<t_csa,t_grid,t_rmq,t_border,t_border_rank,t_border_select,
                     perm = sorted_perm(P); 
                     store_to_file(perm, perm_file);
                 }
-                store_to_cache(permuted_d, surf::KEY_PERMUTED_DOC, cc);
                 std::string perm_d_file = cache_file_name(surf::KEY_PERMUTED_DOC, cc);
                 uint64_t doc_width = 0;
                 {

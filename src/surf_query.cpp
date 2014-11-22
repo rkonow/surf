@@ -23,12 +23,13 @@ typedef struct cmdargs {
     bool verbose = false;
     bool multi_occ = false;
     bool match_only = false;
+    bool correctness = false;
 } cmdargs_t;
 
 void
 print_usage(char* program)
 {
-    fprintf(stdout,"%s -c <collection directory> -q <query file> other options\n",program);
+    fprintf(stdout,"%s -c <collection directory> -q <query file> other options\n", program);
     fprintf(stdout,"where\n");
     fprintf(stdout,"  -c <collection directory>  : the directory the collection is stored.\n");
     fprintf(stdout,"  -q <query file>  : the queries to be performed.\n");
@@ -36,6 +37,7 @@ print_usage(char* program)
     fprintf(stdout,"  -v <verbose>  : verbose mode.\n");
     fprintf(stdout,"  -m <multi_occ>  : only retrieve documents which contain the term more than once.\n");
     fprintf(stdout,"  -o <multi_occ>  : only match pattern; no document retrieval.\n");
+    fprintf(stdout,"  -f <correctness>  : correctness check (super-slow).\n");
 };
 
 cmdargs_t
@@ -46,7 +48,7 @@ parse_args(int argc,char* const argv[])
     args.collection_dir = "";
     args.query_file = "";
     args.k = 10;
-    while ((op=getopt(argc,argv,"c:q:k:vmo")) != -1) {
+    while ((op=getopt(argc,argv,"c:q:k:vmof")) != -1) {
         switch (op) {
             case 'c':
                 args.collection_dir = optarg;
@@ -65,6 +67,9 @@ parse_args(int argc,char* const argv[])
                 break;
             case 'o':
                 args.match_only = true;
+                break;
+            case 'f':
+                args.correctness = true;
                 break;
             case '?':
             default:
@@ -107,11 +112,84 @@ struct myline<sdsl::int_alphabet_tag> {
 };
 
 
+struct correctness_check {
+    public:
+        typedef tuple<size_t, size_t> t_result;
+        cache_config                    m_collection;
+        idx_type                        m_idx;
+        string                          m_query;
+        vector<t_result>                m_result;
+        idx_type::csa_type              m_csa;
+        idx_type::border_type           m_border;
+        idx_type::border_rank_type      m_border_rank;
+        idx_type::border_select_type    m_border_select;
+
+
+
+    correctness_check(const idx_type& idx, const vector<t_result>& res) :
+            m_result(res), m_csa(idx.m_csa), m_border(idx.m_border),
+            m_border_rank(idx.m_border_rank), m_border_select(idx.m_border_select)
+
+        { }
+
+        template<typename t_pat_iter>
+        bool check(t_pat_iter begin, t_pat_iter end, bool multi_occ, bool only_match) {
+            vector<t_result> check_result;
+            map<uint64_t, uint64_t> matches;
+
+            vector<t_result> r;
+            uint64_t m_sp, m_ep;
+
+            bool valid = backward_search(m_csa, 0, m_csa.size() - 1, begin, end, m_sp, m_ep) > 0;
+            if (valid) {
+                for (size_t i = m_sp; i <= m_ep; i++) {
+                    auto document = m_border_rank(m_csa[i]);
+                    matches[document]++;
+                }
+            }
+            for (const auto& x : matches) {
+                r.push_back({get<0>(x), get<1>(x)});
+            }
+
+            size_t k = 0;
+            if (r.size() < m_result.size()) {
+                cerr << "Error there are less real results!" << endl;
+                return false;
+            }
+            if (r.size() == 0 and m_result.size() == 0) {
+                return true;
+            }
+
+            for (const auto& it : m_result) {
+                auto grid_doc_id = get<0>(it);
+                auto grid_freq = get<1>(it);
+                auto pos = lower_bound(r.begin(),r.end(),grid_doc_id, [](const t_result& l, size_t r) {
+                    return get<0>(l) < r;
+                });
+
+                if (get<0>(*pos) != grid_doc_id) {
+                    cerr << "Error at doc result k = " << k <<  " document " << grid_doc_id << " not found" << endl;
+                    return false;
+                } else {
+                    if (get<1>(*pos) != grid_freq) {
+                        cerr << "Error at freq result k = " << k << " freq does not  " << get<1>(*pos) << " != " << " grid_freq" << endl;
+                        return false;
+                    }
+                }
+                k++;
+            }
+            return true;
+        }
+};
+
+
 int main(int argc, char* argv[])
 {
 
     cmdargs_t args = parse_args(argc,argv);
     idx_type idx;
+    typedef tuple<size_t,size_t> t_result;
+    vector<t_result> result;
 
     using timer = chrono::high_resolution_clock;
 
@@ -155,13 +233,24 @@ int main(int argc, char* argv[])
             if ( args.verbose ) {
                 cout<<q_cnt<<";"<<x<<";"<<(*res_it).first<< ";"<<(*res_it).second << endl;
             }
+            if (args.correctness) {
+                result.push_back({(*res_it).first,(*res_it).second});
+            }
             if ( x < args.k ) 
                 ++res_it;
+        }
+        if (args.correctness) {
+            correctness_check ck(idx,result);
+            ck.check(query.begin(), query.end(), args.multi_occ, args.match_only);
+            result.clear();
+            if (q_cnt % 100 == 0) {
+                cout << q_cnt << endl;
+            }
         }
         sum += x;
         auto q_time = timer::now()-q_start;
         // single query should not take more then 5 seconds
-        if (chrono::duration_cast<chrono::seconds>(q_time).count() > 5) {
+        if (chrono::duration_cast<chrono::seconds>(q_time).count() > 5 and !args.correctness) {
             tle = true;
         }
     }
