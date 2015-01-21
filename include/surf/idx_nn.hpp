@@ -4,6 +4,7 @@
 #include "sdsl/suffix_trees.hpp"
 #include "sdsl/k2_treap.hpp"
 #include "sdsl/wt_topk.hpp"
+#include "sdsl/treap_Grid.hpp"
 #include "surf/df_sada.hpp"
 #include "surf/rank_functions.hpp"
 #include "surf/idx_d.hpp"
@@ -215,7 +216,7 @@ public:
         if (!t_grid::permuted_x)
             load_from_cache(m_doc, surf::KEY_DUP, cc);
         else
-            load_from_cache(m_doc, surf::KEY_PERMUTED_DOC, cc, true);
+            load_from_cache(m_doc, surf::KEY_PERMUTED_DOC, cc);
 
         load_from_cache(m_border, surf::KEY_DOCBORDER, cc, true); 
         load_from_cache(m_border_rank, surf::KEY_DOCBORDER_RANK, cc, true); 
