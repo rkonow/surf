@@ -27,7 +27,7 @@ results/experiment1.txt: exp1.txt ../build/surf_query-$(EXP1IDX) $(EXP1RES)
 	@cat $(EXP1RES) > $@
 
 results/experiment1.%.txt: pattern/$(EXP1COL).$(EXP1LEN).byte.txt
-	$(eval ONLYMATCH:=$(call config_select,experiment1.K.config,$*,2)) 
+	$(eval ONLYMATCH:=$(call config_select,experiment1.K.config,$*,2))
 	../build/surf_query-$(EXP1IDX) -c ../collections/$(EXP1COL) \
 		                -q pattern/$(EXP1COL).$(EXP1LEN).byte.txt -k $* \
 						-m $(ONLYMATCH) > $@

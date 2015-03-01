@@ -94,4 +94,9 @@ TARGET_LINK_LIBRARIES(size_info)
 ADD_EXECUTABLE(surf2dcc13 tools/surf2dcc13.cpp)
 TARGET_LINK_LIBRARIES(surf2dcc13 sdsl)
 
+ADD_EXECUTABLE(create_collection tools/create_surf_collection_rkonow.cpp)
+TARGET_LINK_LIBRARIES(create_collection sdsl divsufsort divsufsort64 pthread fastpfor_lib)
+
+
+
 
