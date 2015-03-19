@@ -10,4 +10,4 @@
 [submodule "external/sdsl-lite"]
 	path = external/sdsl-lite
 	url = https://github.com/rkonow/sdsl-lite
-	branch = wt_topk2
+	branch = treap_grid
