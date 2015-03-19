@@ -37,7 +37,7 @@ print_usage(char* program)
     fprintf(stdout,"  -v <verbose>  : verbose mode.\n");
     fprintf(stdout,"  -m <multi_occ>  : only retrieve documents which contain the term more than once.\n");
     fprintf(stdout,"  -o <multi_occ>  : only match pattern; no document retrieval.\n");
-    fprintf(stdout,"  -f <correctness>  : correctness check (super-slow).\n");
+//    fprintf(stdout,"  -f <correctness>  : correctness check (super-slow).\n");
 };
 
 cmdargs_t
@@ -111,7 +111,7 @@ struct myline<sdsl::int_alphabet_tag> {
     }
 };
 
-
+/*
 struct correctness_check {
     public:
         typedef tuple<size_t, size_t> t_result;
@@ -182,7 +182,7 @@ struct correctness_check {
         }
 };
 
-
+*/
 int main(int argc, char* argv[])
 {
 
@@ -233,13 +233,13 @@ int main(int argc, char* argv[])
             if ( args.verbose ) {
                 cout<<q_cnt<<";"<<x<<";"<<(*res_it).first<< ";"<<(*res_it).second << endl;
             }
-            if (args.correctness) {
-                result.push_back({(*res_it).first,(*res_it).second});
-            }
+//            if (args.correctness) {
+//                result.push_back({(*res_it).first,(*res_it).second});
+//            }
             if ( x < args.k ) 
                 ++res_it;
         }
-        if (args.correctness) {
+  /*      if (args.correctness) {
             correctness_check ck(idx,result);
             ck.check(query.begin(), query.end(), args.multi_occ, args.match_only);
             result.clear();
@@ -247,6 +247,7 @@ int main(int argc, char* argv[])
                 cout << q_cnt << endl;
             }
         }
+        */
         sum += x;
         auto q_time = timer::now()-q_start;
         // single query should not take more then 5 seconds

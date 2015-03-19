@@ -4,7 +4,7 @@
 #include "sdsl/suffix_trees.hpp"
 #include "sdsl/k2_treap.hpp"
 #include "sdsl/wt_topk.hpp"
-#include "sdsl/treap_Grid.hpp"
+#include "sdsl/treap_grid.hpp"
 #include "surf/df_sada.hpp"
 #include "surf/rank_functions.hpp"
 #include "surf/idx_d.hpp"
