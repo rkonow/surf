@@ -68,6 +68,7 @@ class df_sada{
             using namespace sdsl;
             auto event = memory_monitor::event("construct df_sada");
             if (cache_file_exists(KEY_H, cc)){
+                std::cout<<"H file exists"<<std::endl;
                 bit_vector h;
                 load_from_cache(h, KEY_H, cc);
                 store_to_cache(h, KEY_H, cc);
@@ -77,10 +78,12 @@ class df_sada{
                 return;
             }
 
-
+            std::cout<<"df_sada does not exist"<<std::endl;
             construct_max_doc_len<alphabet_category::WIDTH>(cc);    
             uint64_t max_len = 0;
             load_from_cache(max_len, surf::KEY_MAXDOCLEN, cc);
+
+            std::cout<<"max_doc_len="<<max_len<<std::endl;
 
             cst_type cst;
 
@@ -289,15 +292,21 @@ void construct(df_sada<t_bv,t_sel,t_alphabet> &idx, const string& file,
     int_vector_buffer<> D(d_file);
     cout<<"n="<<D.size()<<endl;
     if (!cache_file_exists(surf::KEY_C, cc)){
-        auto event = memory_monitor::event("construct c");
+        cout<<"construct C"<<endl;
+        std::cout<<"cache_file_name="<<cache_file_name(surf::KEY_C,cc) <<endl;
+//        auto event = memory_monitor::event("construct c");
         int_vector<> C(D.size(), 0, bits::hi(D.size()) + 1);
-        int_vector<> last_occ(doc_cnt, D.size(), bits::hi(D.size()) + 1);
+        std::cout<<"D.size()="<<D.size()<<" C.width()="<<(size_t)C.width()<<std::endl;
+        int_vector<> last_occ(doc_cnt+1, D.size(), bits::hi(D.size()) + 1);
         for (size_t i = 0; i < D.size(); ++i) {
             uint64_t d = D[i];
+if (d >= last_occ.size()){
+    cout<<"ERROR: d="<<d<<" >= last_occ.size()="<<last_occ.size()<<endl;
+}
             C[i] = last_occ[d];
             last_occ[d] = i;
         }
-        
+        /* 
         if (D.size() < 20){
             cout<<"D=";
             for(size_t i=0; i<D.size(); ++i){
@@ -305,10 +314,16 @@ void construct(df_sada<t_bv,t_sel,t_alphabet> &idx, const string& file,
             }
         }
         cout<<endl;
-        
+        */
+        std::cout<<"surf::KEY_C="<<surf::KEY_C<<std::endl;
+        std::cout<<"cache_file_name="<<cache_file_name(surf::KEY_C,cc) <<endl;
+        cout<<"bitcompressed C start"<<endl; 
         util::bit_compress(C);
+        cout<<"bitcompressed C finished"<<endl; 
         store_to_file(C, cache_file_name(surf::KEY_C, cc));
+        cout<<"store_to_file finished"<<endl;
     }
+    std::cout<<"finished C"<<std::endl;
     typedef WTD_TYPE t_wtd;
     if (!cache_file_exists<t_wtd>(surf::KEY_WTD, cc) ){
         construct_darray<t_alphabet::WIDTH>(cc, false);
